@@ -5,6 +5,11 @@
 #include <Arduino.h>
 #include <stdint.h>
 
+/*** SWITCHES
+LOG - log values
+SET_CURR - get current from UART
+WORK - get current from sensors
+*/
 #define LOG
 #define SET_CURR
 
@@ -44,6 +49,16 @@ void setup()
 void loop()
 {
 
+#ifdef LOG
+  /************************** Set header and params to log **********************************/
+  const String header = "time,curr_ref,curr_sensor,ctr_sig";
+  const long log_parametrs[] = {millis(), current_ref, curr_sensor, PIctrl_curr.y};
+  /********************************************************************************************/
+
+  const int NumOfParams = sizeof(log_parametrs) / sizeof(log_parametrs[0]);
+  log_uart(header, log_parametrs, NumOfParams);
+#endif
+
 #ifdef WORK
   curr_sensor = read_current(CURR_PORT, 1);
 #endif
@@ -51,12 +66,9 @@ void loop()
 #ifdef SET_CURR
   curr_sensor = uart_recive();
 #endif
-  CalcPIctrl(&PIctrl_curr, (current_ref - curr_sensor) / 1000); // mA to Ampery
+  constexpr int MiliamperyToAmpery = 1000;
+  CalcPIctrl(&PIctrl_curr, (current_ref - curr_sensor) / MiliamperyToAmpery);
 
   PWM_write(PWM1_port, PIctrl_curr.y);
   PWM_write(PWM2_port, -PIctrl_curr.y);
-
-#ifdef LOG
-  log_uart(millis(), 0, 0, current_ref, curr_sensor, PIctrl_curr.y);
-#endif
 }
