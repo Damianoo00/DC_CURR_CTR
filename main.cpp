@@ -1,3 +1,13 @@
+/**
+ * @file main.cpp
+ * @author Damian Płaskowicki (damian.plaskowicki.stud@pw.edu.pl)
+ * @brief Drive control with Current PI regulator on Arduino
+ * @version 0.1
+ * @date 2022-05-31
+ *
+ * @copyright Copyright (c) 2022
+ *
+ */
 #include "../include/Control.h"
 #include "../include/PWM.h"
 #include "../include/sensors.h"
@@ -5,14 +15,14 @@
 #include <Arduino.h>
 #include <stdint.h>
 
-/*** SWITCHES
-LOG - log values
-SET_CURR - get current from UART
-WORK - get current from sensors
-*/
-#define LOG
-#define SET_CURR
-
+/**
+ * @brief define or remove correct line to switch any mode
+ * @param DEBUG define to enable debuging mode
+ * @param LOG define to enable logging
+ * @param SET_CURR define to enable getting cuurrent value from uart
+ * @param WORK define to enable getting current from sensor
+ */
+#define WORK
 /***** POUT *****/
 #define PWM1_port 11
 #define PWM2_port 10
@@ -60,7 +70,7 @@ void loop()
 #endif
 
 #ifdef WORK
-  curr_sensor = read_current(CURR_PORT, 1);
+  curr_sensor = CalcCurrent(CURR_PORT, 1);
 #endif
 
 #ifdef SET_CURR
