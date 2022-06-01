@@ -50,8 +50,7 @@ void setup()
 
   uart_begin(BAUD, TIMEOUT);
 
-  PWM_begin(PWM1_port);
-  PWM_begin(PWM2_port);
+  PWM_begin();
 
   InitPIctrl(&PIctrl_curr, Ts, Kr_i, Tr_i, max_i, min_i);
 }
@@ -70,15 +69,15 @@ void loop()
 #endif
 
 #ifdef WORK
-  curr_sensor = CalcCurrent(CURR_PORT, 1);
+  curr_sensor = GetCurrent(CURR_PORT, 1);
 #endif
 
 #ifdef SET_CURR
   curr_sensor = uart_recive();
 #endif
   constexpr int MiliamperyToAmpery = 1000;
-  CalcPIctrl(&PIctrl_curr, (current_ref - curr_sensor) / MiliamperyToAmpery);
+  CalcPIctrl(&PIctrl_curr, (float)(current_ref - curr_sensor) / MiliamperyToAmpery);
 
-  PWM_write(PWM1_port, PIctrl_curr.y);
-  PWM_write(PWM2_port, -PIctrl_curr.y);
+  constexpr int ToDuty = 100;
+  PWM_write((int)(PIctrl_curr.y * ToDuty));
 }
