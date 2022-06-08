@@ -32,18 +32,22 @@
 #define BAUD 115200
 #define TIMEOUT 10
 
-/*** REG params ***/
-const float Ts = 10e3;
-const float Kr_i = 3.2593;
-const float Tr_i = 4.6136;
-const int8_t max_i = 1;
-const int8_t min_i = -1;
+/** Electric Params **/
+constexpr int In = 1; // A
+constexpr int Vs = 6; // V
+
+/*** REG I params ***/
+const float Ts = 0.0001f;
+const float Kr_i = 2584.44f;
+const float Tr_i = 0.0004f;
+const int8_t max_i = Vs;
+const int8_t min_i = 0;
 
 struct PICTRL PIctrl_curr;
 static int curr_sensor = 0;
 
 /* REF current value [mA] */
-const int current_ref = 105;
+const int current_ref = 1.2 * In;
 
 void setup()
 {
@@ -75,9 +79,9 @@ void loop()
 #ifdef SET_CURR
   curr_sensor = uart_recive();
 #endif
-  constexpr int MiliamperyToAmpery = 1000;
-  CalcPIctrl(&PIctrl_curr, (float)(current_ref - curr_sensor) / MiliamperyToAmpery);
+  constexpr float MiliamperyToAmpery = 1000.0f;
+  CalcPIctrl(&PIctrl_curr, current_ref - ((float)curr_sensor) / MiliamperyToAmpery);
 
   constexpr int ToDuty = 100;
-  PWM_write((int)(PIctrl_curr.y * ToDuty));
+  PWM_write((int)(PIctrl_curr.y * ToDuty / max_i));
 }
