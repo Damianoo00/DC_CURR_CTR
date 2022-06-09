@@ -22,10 +22,10 @@
  * @param SET_CURR define to enable getting cuurrent value from uart
  * @param WORK define to enable getting current from sensor
  */
+#define LOG
 #define WORK
 /***** POUT *****/
-#define PWM1_port 11
-#define PWM2_port 10
+
 #define CURR_PORT A0
 
 /*** UART params***/
@@ -46,8 +46,8 @@ const int8_t min_i = 0;
 struct PICTRL PIctrl_curr;
 static int curr_sensor = 0;
 
-/* REF current value [mA] */
-const int current_ref = 1.2 * In;
+/* REF current value [A] */
+const float current_ref = 1.2 * In;
 
 void setup()
 {
@@ -65,7 +65,7 @@ void loop()
 #ifdef LOG
   /************************** Set header and params to log **********************************/
   const String header = "time,curr_ref,curr_sensor,ctr_sig";
-  const long log_parametrs[] = {millis(), current_ref, curr_sensor, PIctrl_curr.y};
+  const long log_parametrs[] = {millis(), (long)(PIctrl_curr.y * 1000)};
   /********************************************************************************************/
 
   const int NumOfParams = sizeof(log_parametrs) / sizeof(log_parametrs[0]);
@@ -83,5 +83,5 @@ void loop()
   CalcPIctrl(&PIctrl_curr, current_ref - ((float)curr_sensor) / MiliamperyToAmpery);
 
   constexpr int ToDuty = 100;
-  PWM_write((int)(PIctrl_curr.y * ToDuty / max_i));
+  PWM_write((int)(PIctrl_curr.y * ToDuty / Vs));
 }
