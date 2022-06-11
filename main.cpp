@@ -8,6 +8,7 @@
  * @copyright Copyright (c) 2022
  *
  */
+
 #include "../include/Control.h"
 #include "../include/PWM.h"
 #include "../include/sensors.h"
@@ -22,11 +23,11 @@
  * @param SET_CURR define to enable getting cuurrent value from uart
  * @param WORK define to enable getting current from sensor
  */
-#define LOG
 #define WORK
 /***** POUT *****/
-
 #define CURR_PORT A0
+#define BRIDGE_SWITCH 2
+#define PWM_PORT 10
 
 /*** UART params***/
 #define BAUD 115200
@@ -51,11 +52,11 @@ const float current_ref = 1.2 * In;
 
 void setup()
 {
+  pinMode(BRIDGE_SWITCH, OUTPUT);
+  digitalWrite(BRIDGE_SWITCH, true);
 
   uart_begin(BAUD, TIMEOUT);
-
-  PWM_begin();
-
+  PWM_begin(PWM_PORT);
   InitPIctrl(&PIctrl_curr, Ts, Kr_i, Tr_i, max_i, min_i);
 }
 
@@ -65,7 +66,7 @@ void loop()
 #ifdef LOG
   /************************** Set header and params to log **********************************/
   const String header = "time,curr_ref,curr_sensor,ctr_sig";
-  const long log_parametrs[] = {millis(), (long)(PIctrl_curr.y * 1000)};
+  const long log_parametrs[] = {millis(), (int)(current_ref * 1000), curr_sensor, (long)(PIctrl_curr.y * 1000)};
   /********************************************************************************************/
 
   const int NumOfParams = sizeof(log_parametrs) / sizeof(log_parametrs[0]);
@@ -73,7 +74,7 @@ void loop()
 #endif
 
 #ifdef WORK
-  curr_sensor = GetCurrent(CURR_PORT, 1);
+  curr_sensor = GetCurrent(CURR_PORT, 500);
 #endif
 
 #ifdef SET_CURR
@@ -82,6 +83,5 @@ void loop()
   constexpr float MiliamperyToAmpery = 1000.0f;
   CalcPIctrl(&PIctrl_curr, current_ref - ((float)curr_sensor) / MiliamperyToAmpery);
 
-  constexpr int ToDuty = 100;
-  PWM_write((int)(PIctrl_curr.y * ToDuty / Vs));
+  PWM_write(VoltageToDuty(PIctrl_curr.y, Vs));
 }
